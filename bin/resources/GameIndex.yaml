@@ -2322,9 +2322,10 @@ SCES-51135:
   region: "PAL-M5"
   compat: 5
   roundModes:
-    vuRoundMode: 0  # Fixes SPS.
+    vuRoundMode: 1 # Fixes SPS.
+    eeRoundMode: 0 # Fixes textures on the doors.
   clampModes:
-    vuClampMode: 2  # Fix other SPS.
+    vuClampMode: 0 # Fix other SPS.
   gameFixes:
     - VUKickstartHack # Fixes objects disappearing.
 SCES-51159:
@@ -2469,9 +2470,10 @@ SCES-51685:
   name: "Primal"
   region: "PAL-E-R"
   roundModes:
-    vuRoundMode: 0  # Fixes SPS.
+    vuRoundMode: 1 # Fixes SPS.
+    eeRoundMode: 0 # Fixes textures on the doors.
   clampModes:
-    vuClampMode: 2  # Fix other SPS.
+    vuClampMode: 0 # Fix other SPS.
   gameFixes:
     - VUKickstartHack # Fixes objects disappearing.
 SCES-51706:
@@ -5389,9 +5391,10 @@ SCUS-97142:
   region: "NTSC-U"
   compat: 5
   roundModes:
-    vuRoundMode: 0  # Fixes SPS.
+    vuRoundMode: 1 # Fixes SPS.
+    eeRoundMode: 0 # Fixes textures on the doors.
   clampModes:
-    vuClampMode: 2  # Fix other SPS.
+    vuClampMode: 0 # Fix other SPS.
   gameFixes:
     - VUKickstartHack # Fixes objects disappearing.
 SCUS-97144:
@@ -5658,9 +5661,10 @@ SCUS-97225:
   name: "Primal [Demo]"
   region: "NTSC-U"
   roundModes:
-    vuRoundMode: 0  # Fixes SPS.
+    vuRoundMode: 1 # Fixes SPS.
+    eeRoundMode: 0 # Fixes textures on the doors.
   clampModes:
-    vuClampMode: 2  # Fix other SPS.
+    vuClampMode: 0 # Fix other SPS.
   gameFixes:
     - VUKickstartHack # Fixes objects disappearing.
 SCUS-97226:
@@ -7023,6 +7027,8 @@ SLAJ-35003:
 SLED-50117:
   name: "Metal Gear Solid 2 - Sons of Liberty [Demo] [Zone of the Enders Bonus Disc]"
   region: "PAL-E"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.  
 SLED-50359:
   name: "Devil May Cry [Demo]"
   region: "PAL-E"
@@ -7960,12 +7966,18 @@ SLES-50383:
   name: "Metal Gear Solid 2 - Sons of Liberty"
   region: "PAL-M3"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLES-50384:
-  name: "Project Zero II"
+  name: "Metal Gear Solid 2 - Sons of Liberty"
   region: "PAL-I"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLES-50385:
   name: "Metal Gear Solid 2 - Sons of Liberty"
   region: "PAL-S"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLES-50386:
   name: "Crash Bandicoot - Wrath of Cortex"
   region: "PAL-M6"
@@ -13944,6 +13956,8 @@ SLES-53491:
 SLES-53492:
   name: "Total Overdose"
   region: "PAL-M5"
+  gameFixes:
+    - VUKickstartHack # Fixes SPS.
 SLES-53494:
   name: "Spongebob SquarePants - Lights, Camera, PANTS!"
   region: "PAL-E"
@@ -18559,6 +18573,8 @@ SLES-82009:
   name: "Metal Gear Solid 2 - Substance"
   region: "PAL-M5"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLES-82010:
   name: "Metal Gear Solid 2, Document of"
   region: "PAL-E"
@@ -18821,6 +18837,12 @@ SLKA-25043:
   name: "Virtua Fighter 4 - Evolution"
   region: "NTSC-K"
   compat: 5
+SLKA-25044:
+  name: "Robotech: Battlecry"
+  region: "NTSC-K"
+SLKA-25045:
+  name: "The King of Fighters 2000"
+  region: "NTSC-K"
 SLKA-25046:
   name: "Dragon Ball Z"
   region: "NTSC-K"
@@ -19026,11 +19048,17 @@ SLKA-25202:
   memcardFilters:
     - "SLKA-25201"
     - "SLKA-25202"
+SLKA-25203:
+  name: "World Soccer Winning Eleven 8 International"
+  region: "NTSC-K"
 SLKA-25204:
   name: "Showdown - Legends of Wrestling"
   region: "NTSC-K"
 SLKA-25205:
   name: "Dragon Ball Z 3"
+  region: "NTSC-K"
+SLKA-25206:
+  name: "Burnout 3: Takedown"
   region: "NTSC-K"
 SLKA-25207:
   name: "Sakura Taisen V - Episode 0 - Samurai Girl of Wild"
@@ -19133,6 +19161,9 @@ SLKA-25259:
   region: "NTSC-K"
 SLKA-25261:
   name: "Tsukiyo ni Saraba"
+  region: "NTSC-K"
+SLKA-25262:
+  name: "World Soccer Winning Eleven 8 International"
   region: "NTSC-K"
 SLKA-25263:
   name: "NanoBreaker"
@@ -19275,6 +19306,9 @@ SLKA-25331:
 SLKA-25333:
   name: "Metal Slug Complete"
   region: "NTSC-K"
+SLKA-25335:
+  name: "Shadow the Hedgehog"
+  region: "NTSC-K"
 SLKA-25341:
   name: "Driver - Parallel Lines"
   region: "NTSC-K"
@@ -19381,6 +19415,8 @@ SLKA-35001:
   name: "Metal Gear Solid 2 Substance"
   region: "NTSC-K"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLKA-35003:
   name: "Sakura Taisen - Atsuki Chishioni"
   region: "NTSC-K"
@@ -21903,9 +21939,13 @@ SLPM-65076:
 SLPM-65077:
   name: "Metal Gear Solid 2 - Sons of Liberty [Premium Package]"
   region: "NTSC-J"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLPM-65078:
   name: "Metal Gear Solid 2 - Sons of Liberty"
   region: "NTSC-J"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLPM-65080:
   name: "Tokimeki Memorial 3"
   region: "NTSC-J"
@@ -26231,6 +26271,8 @@ SLPM-66502:
 SLPM-66503:
   name: "Metal Gear Solid 2 [Mega Hits]"
   region: "NTSC-J"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLPM-66504:
   name: "Onimusha 2 [Mega Hits]"
   region: "NTSC-J"
@@ -27165,6 +27207,8 @@ SLPM-66791:
 SLPM-66792:
   name: "Metal Gear Solid 2 - Sons of Liberty [20th Anniversary Edition]"
   region: "NTSC-J"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLPM-66794:
   name: "Metal Gear Solid 3 - Snake Eater [20th Anniversary Edition]"
   region: "NTSC-J"
@@ -27681,6 +27725,9 @@ SLPM-66978:
   name: "Persona 4 [Konami-style Special Edition]"
   region: "NTSC-J"
   compat: 5
+SLPM-66980:
+  name: "Gin no Eclipse"
+  region: "NTSC-J"
 SLPM-66987:
   name: "Kowloon Youma Gakuen Ki [Best Version]"
   region: "NTSC-J"
@@ -27724,6 +27771,8 @@ SLPM-67000:
 SLPM-67002:
   name: "Metal Gear Solid 2 - Substance"
   region: "NTSC-J"
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLPM-67003:
   name: "Sakura Taisen - Atsuki Chishioni"
   region: "NTSC-J"
@@ -28267,6 +28316,8 @@ SLPS-20048:
 SLPS-20050:
   name: "Happy! Happy!! Boarders in Hokkaidou Rusutsu Resort"
   region: "NTSC-J"
+  speedHacks:
+    mvuFlagSpeedHack: 0 # Fixes graphical issues.
 SLPS-20051:
   name: "Hissatsu Pachinko Station V"
   region: "NTSC-J"
@@ -33110,6 +33161,8 @@ SLUS-20144:
   name: "Metal Gear Solid 2 - Sons of Liberty"
   region: "NTSC-U"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLUS-20145:
   name: "Ring of Red"
   region: "NTSC-U"
@@ -34842,6 +34895,8 @@ SLUS-20554:
   name: "Metal Gear Solid 2 - Substance"
   region: "NTSC-U"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLUS-20555:
   name: "Reel Fishing 3"
   region: "NTSC-U"
@@ -38015,6 +38070,8 @@ SLUS-21283:
   name: "Total Overdose - A Gunslinger's Tale in Mexico"
   region: "NTSC-U"
   compat: 5
+  gameFixes:
+    - VUKickstartHack # Fixes SPS.
 SLUS-21284:
   name: "Nicktoons Unite!"
   region: "NTSC-U"
@@ -40912,6 +40969,8 @@ SLUS-29003:
   name: "Metal Gear Solid 2 - Sons of Liberty [Demo]"
   region: "NTSC-U"
   compat: 5
+  gameFixes:
+    - EETimingHack # Fixes broken half-bottom artifacts.
 SLUS-29004:
   name: "Unison & Dead or Alive 2 Hardcore [Demo]"
   region: "NTSC-U"
