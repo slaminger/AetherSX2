@@ -1219,7 +1219,8 @@ __fi void cdvdReadInterrupt()
 	if (cdvd.nextSectorsBuffered)
 		CDVDREAD_INT((cdvd.BlockSize / 4));
 	else
-		CDVDREAD_INT(cdvd.ReadTime + (cdvd.BlockSize / 4));
+		CDVDREAD_INT((psxRegs.cycle - psxRegs.sCycle[IopEvt_CdvdSectorReady]) + ((cdvd.BlockSize / 4));
+
 }
 
 // Returns the number of IOP cycles until the event completes.
@@ -1229,6 +1230,7 @@ static uint cdvdStartSeek(uint newsector, CDVD_MODE_TYPE mode)
 
 	uint delta = abs((s32)(cdvd.SeekToSector - cdvd.Sector));
 	uint seektime;
+	bool isSeeking = cdvd.nCommand == N_CD_SEEK;
 
 	cdvd.Ready &= ~(CDVD_DRIVE_READY | CDVD_DRIVE_DATARDY);
 	cdvd.Reading = 1;
@@ -1266,6 +1268,7 @@ static uint cdvdStartSeek(uint newsector, CDVD_MODE_TYPE mode)
 			CDVD_LOG("CdSeek Begin > to sector %d, from %d - delta=%d [FAST]", cdvd.SeekToSector, cdvd.Sector, delta);
 			seektime = Cdvd_FastSeek_Cycles;
 		}
+		isSeeking = true;
 	}
 	else
 	{
@@ -1306,13 +1309,20 @@ static uint cdvdStartSeek(uint newsector, CDVD_MODE_TYPE mode)
 		}
 		else
 		{
-			psxRegs.interrupt &= ~(1 << IopEvt_CdvdSectorReady);
-			cdvd.nextSectorsBuffered = 0;
+			if (delta < cdvd.nextSectorsBuffered)
+			{
+				isSeeking = false;
+			}
+			else
+			{
+				psxRegs.interrupt &= ~(1 << IopEvt_CdvdSectorReady);
+				cdvd.nextSectorsBuffered = 0;
+			}
 		}
 	}
 
 	// Only do this on reads, the seek kind of accounts for this and then it reads the sectors after
-	if (delta && cdvd.nCommand != N_CD_SEEK)
+	if (delta && !isSeeking)
 	{
 		int rotationalLatency = cdvdRotationalLatency((CDVD_MODE_TYPE)cdvdIsDVD());
 		//DevCon.Warning("%s rotational latency at sector %d is %d cycles", (cdvd.SpindlCtrl & CDVD_SPINDLE_CAV) ? "CAV" : "CLV", cdvd.SeekToSector, rotationalLatency);
@@ -1320,6 +1330,8 @@ static uint cdvdStartSeek(uint newsector, CDVD_MODE_TYPE mode)
 		CDVDSECTORREADY_INT(seektime);
 		seektime += (cdvd.BlockSize / 4);
 	}
+	else if(cdvd.nCommand != N_CD_SEEK)
+		CDVDSECTORREADY_INT(seektime + ((cdvd.BlockSize / 4) * 12));
 	return seektime;
 }
 
