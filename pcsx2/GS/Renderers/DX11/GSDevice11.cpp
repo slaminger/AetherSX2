@@ -127,7 +127,7 @@ bool GSDevice11::Create(HostDisplay* display)
 		m_hack_topleft_offset = (m_upscale_multiplier != 1 && nvidia_vendor && !disable_safe_features) ? -0.01f : 0.0f;
 	}
 
-	std::optional<std::string> shader = Host::ReadResourceFileToString("gs_dx11/tfx.fx");
+	std::optional<std::string> shader = Host::ReadResourceFileToString("shaders/dx11/tfx.fx");
 	if (!shader.has_value())
 		return false;
 	m_tfx_source = std::move(*shader);
@@ -143,7 +143,7 @@ bool GSDevice11::Create(HostDisplay* display)
 
 	ShaderMacro sm_model(m_shader.model);
 
-	shader = Host::ReadResourceFileToString("gs_dx11/convert.fx");
+	shader = Host::ReadResourceFileToString("shaders/dx11/convert.fx");
 	if (!shader.has_value())
 		return false;
 	CreateShader(*shader, "convert.fx", nullptr, "vs_main", sm_model.GetPtr(), &m_convert.vs, il_convert, countof(il_convert), m_convert.il.put());
@@ -184,7 +184,7 @@ bool GSDevice11::Create(HostDisplay* display)
 
 	m_dev->CreateBuffer(&bd, nullptr, m_merge.cb.put());
 
-	shader = Host::ReadResourceFileToString("gs_dx11/merge.fx");
+	shader = Host::ReadResourceFileToString("shaders/dx11/merge.fx");
 	if (!shader.has_value())
 		return false;
 
@@ -216,7 +216,7 @@ bool GSDevice11::Create(HostDisplay* display)
 
 	m_dev->CreateBuffer(&bd, nullptr, m_interlace.cb.put());
 
-	shader = Host::ReadResourceFileToString("gs_dx11/interlace.fx");
+	shader = Host::ReadResourceFileToString("shaders/dx11/interlace.fx");
 	if (!shader.has_value())
 		return false;
 	for (size_t i = 0; i < countof(m_interlace.ps); i++)
@@ -240,7 +240,7 @@ bool GSDevice11::Create(HostDisplay* display)
 
 	m_dev->CreateBuffer(&bd, nullptr, m_shadeboost.cb.put());
 
-	shader = Host::ReadResourceFileToString("gs_dx11/shadeboost.fx");
+	shader = Host::ReadResourceFileToString("shaders/dx11/shadeboost.fx");
 	if (!shader.has_value())
 		return false;
 	CreateShader(*shader, "shadeboost.fx", nullptr, "ps_main", sm_sboost.GetPtr(), m_shadeboost.ps.put());
@@ -832,7 +832,7 @@ void GSDevice11::DoFXAA(GSTexture* sTex, GSTexture* dTex)
 	{
 		try
 		{
-			std::optional<std::string> shader = Host::ReadResourceFileToString("gs_dx11/fxaa.fx");
+			std::optional<std::string> shader = Host::ReadResourceFileToString("shaders/dx11/fxaa.fx");
 			if (shader.has_value())
 			{
 				ShaderMacro sm(m_shader.model);

@@ -319,7 +319,7 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 		Console.Warning("Shader cache failed to open, do you have more than one instance running?");
 
 	{
-		auto shader = Host::ReadResourceFileToString("gs_opengl/common_header.glsl");
+		auto shader = Host::ReadResourceFileToString("shaders/opengl/common_header.glsl");
 		if (!shader.has_value())
 			return false;
 
@@ -453,7 +453,8 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 		m_convert.cb->upload(&m_misc_cb_cache);
 
 		// these all share the same vertex shader
-		const auto shader = Host::ReadResourceFileToString("gs_opengl/convert.glsl");
+		const auto shader = Host::ReadResourceFileToString("shaders/opengl/convert.glsl");
+
 		if (!shader.has_value())
 			return false;
 
@@ -486,7 +487,8 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 	{
 		GL_PUSH("GSDeviceOGL::Merge");
 
-		const auto shader = Host::ReadResourceFileToString("gs_opengl/merge.glsl");
+		const auto shader = Host::ReadResourceFileToString("shaders/opengl/merge.glsl");
+		m_merge_obj.cb = new GSUniformBufferOGL("Merge UBO", g_merge_cb_index, sizeof(MergeConstantBuffer));
 		if (!shader.has_value())
 			return false;
 
@@ -506,7 +508,8 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 	{
 		GL_PUSH("GSDeviceOGL::Interlace");
 
-		const auto shader = Host::ReadResourceFileToString("gs_opengl/interlace.glsl");
+		const auto shader = Host::ReadResourceFileToString("shaders/opengl/interlace.glsl");
+		m_interlace.cb = new GSUniformBufferOGL("Interlace UBO", g_interlace_cb_index, sizeof(InterlaceConstantBuffer));
 		if (!shader.has_value())
 			return false;
 
@@ -534,7 +537,7 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 			+ format("#define SB_BRIGHTNESS %d.0\n", ShadeBoost_Brightness)
 			+ format("#define SB_CONTRAST %d.0\n", ShadeBoost_Contrast);
 
-		const auto shader = Host::ReadResourceFileToString("gs_opengl/shadeboost.glsl");
+		const auto shader = Host::ReadResourceFileToString("shaders/opengl/shadeboost.glsl");
 		if (!shader.has_value())
 			return false;
 
@@ -654,8 +657,8 @@ bool GSDeviceOGL::CreateTextureFX()
 {
 	GL_PUSH("GSDeviceOGL::CreateTextureFX");
 
-	auto vertex_shader = Host::ReadResourceFileToString("gs_opengl/tfx_vgs.glsl");
-	auto fragment_shader = Host::ReadResourceFileToString("gs_opengl/tfx_fs.glsl");
+	auto vertex_shader = Host::ReadResourceFileToString("shaders/opengl/tfx_vgs.glsl");
+	auto fragment_shader = Host::ReadResourceFileToString("shaders/opengl/tfx_fs.glsl");
 	if (!vertex_shader.has_value() || !fragment_shader.has_value())
 		return false;
 
@@ -1544,7 +1547,7 @@ void GSDeviceOGL::DoFXAA(GSTexture* sTex, GSTexture* dTex)
 		std::string fxaa_macro = "#define FXAA_GLSL_130 1\n";
 		fxaa_macro += "#extension GL_ARB_gpu_shader5 : enable\n";
 
-		std::optional<std::string> shader = Host::ReadResourceFileToString("gs_opengl/fxaa.fx");
+		std::optional<std::string> shader = Host::ReadResourceFileToString("shaders/opengl/fxaa.fx");
 		if (!shader.has_value())
 			return;
 
