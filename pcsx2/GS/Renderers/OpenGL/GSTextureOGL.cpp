@@ -111,7 +111,11 @@ namespace PboPool
 			glDeleteSync(m_fence[i]);
 		}
 
-		glDeleteBuffers(1, &m_buffer);
+		if (m_buffer != 0)
+		{
+			glDeleteBuffers(1, &m_buffer);
+			m_buffer = 0;
+		}
 	}
 
 	void BindPbo()
