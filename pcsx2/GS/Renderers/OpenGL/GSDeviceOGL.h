@@ -126,41 +126,6 @@ public:
 class GSDeviceOGL final : public GSDevice
 {
 public:
-	struct alignas(32) VSConstantBuffer
-	{
-		GSVector4 Vertex_Scale_Offset;
-
-		GSVector4 TextureOffset;
-
-		GSVector2 PointSize;
-		GSVector2i MaxDepth;
-
-		VSConstantBuffer()
-		{
-			Vertex_Scale_Offset = GSVector4::zero();
-			TextureOffset       = GSVector4::zero();
-			PointSize           = GSVector2(0);
-			MaxDepth            = GSVector2i(0);
-		}
-
-		__forceinline bool Update(const VSConstantBuffer* cb)
-		{
-			GSVector4i* a = (GSVector4i*)this;
-			GSVector4i* b = (GSVector4i*)cb;
-
-			if (!((a[0] == b[0]) & (a[1] == b[1]) & (a[2] == b[2])).alltrue())
-			{
-				a[0] = b[0];
-				a[1] = b[1];
-				a[2] = b[2];
-
-				return true;
-			}
-
-			return false;
-		}
-	};
-
 	struct VSSelector
 	{
 		union
@@ -214,253 +179,14 @@ public:
 		}
 	};
 
-	struct alignas(32) PSConstantBuffer
-	{
-		GSVector4 FogColor_AREF;
-		GSVector4 WH;
-		GSVector4 TA_Af;
-		GSVector4i MskFix;
-		GSVector4i FbMask;
-
-		GSVector4 HalfTexel;
-		GSVector4 MinMax;
-		GSVector4 TC_OH_TS;
-		GSVector4 MaxDepth;
-
-		GSVector4 DitherMatrix[4];
-
-		PSConstantBuffer()
-		{
-			FogColor_AREF = GSVector4::zero();
-			HalfTexel     = GSVector4::zero();
-			WH            = GSVector4::zero();
-			TA_Af         = GSVector4::zero();
-			MinMax        = GSVector4::zero();
-			MskFix        = GSVector4i::zero();
-			TC_OH_TS      = GSVector4::zero();
-			FbMask        = GSVector4i::zero();
-			MaxDepth      = GSVector4::zero();
-
-			DitherMatrix[0] = GSVector4::zero();
-			DitherMatrix[1] = GSVector4::zero();
-			DitherMatrix[2] = GSVector4::zero();
-			DitherMatrix[3] = GSVector4::zero();
-		}
-
-		__forceinline bool Update(const PSConstantBuffer* cb)
-		{
-			GSVector4i* a = (GSVector4i*)this;
-			GSVector4i* b = (GSVector4i*)cb;
-
-			// if WH matches both HalfTexel and TC_OH_TS do too
-			if (!((a[0] == b[0]) & (a[1] == b[1]) & (a[2] == b[2]) & (a[3] == b[3]) & (a[4] == b[4]) & (a[6] == b[6])
-				& (a[8] == b[8]) & (a[9] == b[9]) & (a[10] == b[10]) & (a[11] == b[11]) & (a[12] == b[12])).alltrue())
-			{
-				// Note previous check uses SSE already, a plain copy will be faster than any memcpy
-				a[0] = b[0];
-				a[1] = b[1];
-				a[2] = b[2];
-				a[3] = b[3];
-				a[4] = b[4];
-				a[5] = b[5];
-				a[6] = b[6];
-
-				a[8] = b[8];
-
-				a[9] = b[9];
-				a[10] = b[10];
-				a[11] = b[11];
-				a[12] = b[12];
-
-				return true;
-			}
-
-			return false;
-		}
-	};
-
-	struct PSSelector
-	{
-		// Performance note: there are too many shader combinations
-		// It might hurt the performance due to frequent toggling worse it could consume
-		// a lots of memory.
-		union
-		{
-			struct
-			{
-				// *** Word 1
-				// Format
-				uint32 tex_fmt   : 4;
-				uint32 dfmt      : 2;
-				uint32 depth_fmt : 2;
-				// Alpha extension/Correction
-				uint32 aem : 1;
-				uint32 fba : 1;
-				// Fog
-				uint32 fog : 1;
-				// Flat/goround shading
-				uint32 iip : 1;
-				// Pixel test
-				uint32 date : 3;
-				uint32 atst : 3;
-				// Color sampling
-				uint32 fst : 1; // Investigate to do it on the VS
-				uint32 tfx : 3;
-				uint32 tcc : 1;
-				uint32 wms : 2;
-				uint32 wmt : 2;
-				uint32 ltf : 1;
-				// Shuffle and fbmask effect
-				uint32 shuffle  : 1;
-				uint32 read_ba  : 1;
-				uint32 write_rg : 1;
-				uint32 fbmask   : 1;
-
-				//uint32 _free1:0;
-
-				// *** Word 2
-				// Blend and Colclip
-				uint32 blend_a : 2;
-				uint32 blend_b : 2;
-				uint32 blend_c : 2;
-				uint32 blend_d : 2;
-				uint32 clr1    : 1; // useful?
-				uint32 hdr     : 1;
-				uint32 colclip : 1;
-				uint32 pabe    : 1;
-
-				// Others ways to fetch the texture
-				uint32 channel : 3;
-
-				// Dithering
-				uint32 dither : 2;
-
-				// Depth clamp
-				uint32 zclamp : 1;
-
-				// Hack
-				uint32 tcoffsethack : 1;
-				uint32 urban_chaos_hle : 1;
-				uint32 tales_of_abyss_hle : 1;
-				uint32 tex_is_fb : 1; // Jak Shadows
-				uint32 automatic_lod : 1;
-				uint32 manual_lod : 1;
-				uint32 point_sampler : 1;
-				uint32 invalid_tex0 : 1; // Lupin the 3rd
-
-				uint32 blend_premultiply : 2;
-
-				uint32 _free2 : 4;
-			};
-
-			uint64 key;
-		};
-
-		// FIXME is the & useful ?
-		operator uint64() const { return key; }
-
-		PSSelector()
-			: key(0)
-		{
-		}
-	};
-
-	struct PSSamplerSelector
-	{
-		union
-		{
-			struct
-			{
-				uint32 tau   : 1;
-				uint32 tav   : 1;
-				uint32 biln  : 1;
-				uint32 triln : 3;
-				uint32 aniso : 1;
-
-				uint32 _free : 25;
-			};
-
-			uint32 key;
-		};
-
-		operator uint32() { return key; }
-
-		PSSamplerSelector()
-			: key(0)
-		{
-		}
-		PSSamplerSelector(uint32 k)
-			: key(k)
-		{
-		}
-	};
-
-	struct OMDepthStencilSelector
-	{
-		union
-		{
-			struct
-			{
-				uint32 ztst : 2;
-				uint32 zwe  : 1;
-				uint32 date : 1;
-				uint32 date_one : 1;
-
-				uint32 _free : 27;
-			};
-
-			uint32 key;
-		};
-
-		// FIXME is the & useful ?
-		operator uint32() { return key; }
-
-		OMDepthStencilSelector()
-			: key(0)
-		{
-		}
-		OMDepthStencilSelector(uint32 k)
-			: key(k)
-		{
-		}
-	};
-
-	struct OMColorMaskSelector
-	{
-		union
-		{
-			struct
-			{
-				uint32 wr : 1;
-				uint32 wg : 1;
-				uint32 wb : 1;
-				uint32 wa : 1;
-
-				uint32 _free : 28;
-			};
-
-			struct
-			{
-				uint32 wrgba : 4;
-			};
-
-			uint32 key;
-		};
-
-		// FIXME is the & useful ?
-		operator uint32() { return key & 0xf; }
-
-		OMColorMaskSelector()
-			: key(0xF)
-		{
-		}
-		OMColorMaskSelector(uint32 c) { wrgba = c; }
-	};
+	using PSSelector = GSHWDrawConfig::PSSelector;
+	using PSSamplerSelector = GSHWDrawConfig::SamplerSelector;
+	using OMDepthStencilSelector = GSHWDrawConfig::DepthStencilSelector;
+	using OMColorMaskSelector = GSHWDrawConfig::ColorMaskSelector;
 
 	struct alignas(32) MiscConstantBuffer
 	{
 		GSVector4i ScalingFactor;
-		GSVector4i ChannelShuffle;
 		GSVector4i EMOD_AC;
 
 		MiscConstantBuffer() { memset(this, 0, sizeof(*this)); }
@@ -577,8 +303,8 @@ private:
 
 	GLuint m_palette_ss;
 
-	VSConstantBuffer m_vs_cb_cache;
-	PSConstantBuffer m_ps_cb_cache;
+	GSHWDrawConfig::VSConstantBuffer m_vs_cb_cache;
+	GSHWDrawConfig::PSConstantBuffer m_ps_cb_cache;
 	MiscConstantBuffer m_misc_cb_cache;
 
 	GSTexture* CreateSurface(int type, int w, int h, int format) final;
@@ -663,8 +389,12 @@ public:
 	GLuint CreateSampler(PSSamplerSelector sel);
 	GSDepthStencilOGL* CreateDepthStencil(OMDepthStencilSelector dssel);
 
-	void SetupPipeline(const ProgramSelector& psel);
-	void SetupCB(const VSConstantBuffer* vs_cb, const PSConstantBuffer* ps_cb);
+	void SelfShaderTestPrint(const std::string& test, int& nb_shader);
+	void SelfShaderTestRun(const std::string& dir, const std::string& file, const PSSelector& sel, int& nb_shader);
+	void SelfShaderTest();
+
+	void SetupPipeline(const VSSelector& vsel, const GSSelector& gsel, const PSSelector& psel);
+	void SetupCB(const GSHWDrawConfig::VSConstantBuffer* vs_cb, const GSHWDrawConfig::PSConstantBuffer* ps_cb);
 	void SetupCBMisc(const GSVector4i& channel);
 	void SetupSampler(PSSamplerSelector ssel);
 	void SetupOM(OMDepthStencilSelector dssel);

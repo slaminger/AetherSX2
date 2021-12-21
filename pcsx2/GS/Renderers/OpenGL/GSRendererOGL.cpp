@@ -146,9 +146,8 @@ void GSRendererOGL::EmulateZbuffer()
 		}
 		else if (!m_context->ZBUF.ZMSK)
 		{
-			// This is 0..1, not -1..1 without clip control.
-			ps_cb.MaxDepth = GSVector4(0.0f, 0.0f, 0.0f, max_z * (GLLoader::has_clip_control ? ldexpf(1, -32) : ldexpf(1, -24)));
-			m_prog_sel.ps.zclamp = 1;
+			m_conf.cb_ps.TA_MaxDepth_Af.z = static_cast<float>(max_z) * 0x1p-32f;
+			m_conf.ps.zclamp = 1;
 		}
 	}
 
@@ -227,10 +226,10 @@ void GSRendererOGL::EmulateTextureShuffleAndFbmask()
 
 		if (m_prog_sel.ps.fbmask && m_sw_blending)
 		{
-			ps_cb.FbMask.r = rg_mask;
-			ps_cb.FbMask.g = rg_mask;
-			ps_cb.FbMask.b = ba_mask;
-			ps_cb.FbMask.a = ba_mask;
+			m_conf.cb_ps.FbMask.r = rg_mask;
+			m_conf.cb_ps.FbMask.g = rg_mask;
+			m_conf.cb_ps.FbMask.b = ba_mask;
+			m_conf.cb_ps.FbMask.a = ba_mask;
 
 			// No blending so hit unsafe path.
 			if (!PRIM->ABE)
@@ -263,7 +262,7 @@ void GSRendererOGL::EmulateTextureShuffleAndFbmask()
 
 		if (m_prog_sel.ps.fbmask)
 		{
-			ps_cb.FbMask = fbmask_v.u8to32();
+			m_conf.cb_ps.FbMask = fbmask_v.u8to32();
 			// Only alpha is special here, I think we can take a very unsafe shortcut
 			// Alpha isn't blended on the GS but directly copyied into the RT.
 			//
@@ -404,7 +403,8 @@ void GSRendererOGL::EmulateChannelShuffle(GSTexture** rt, const GSTextureCache::
 				if (blue_shift >= 0)
 				{
 					GL_INS("Green/Blue channel (%d, %d)", blue_shift, green_shift);
-					m_prog_sel.ps.channel = ChannelFetch_GXBY;
+					m_conf.cb_ps.ChannelShuffle = GSVector4i(blue_mask, blue_shift, green_mask, green_shift);
+					m_conf.ps.channel = ChannelFetch_GXBY;
 					m_context->FRAME.FBMSK = 0x00FFFFFF;
 				}
 				else
@@ -638,9 +638,7 @@ void GSRendererOGL::EmulateBlending(bool& DATE_GL42, bool& DATE_GL45)
 
 		// Require the fix alpha vlaue
 		if (ALPHA.C == 2)
-		{
-			ps_cb.TA_Af.a = (float)ALPHA.FIX / 128.0f;
-		}
+			m_conf.cb_ps.TA_MaxDepth_Af.a = static_cast<float>(ALPHA.FIX) / 128.0f;
 	}
 	else
 	{
@@ -726,9 +724,8 @@ void GSRendererOGL::EmulateTextureSampler(const GSTextureCache::Source* tex)
 		// Shuffle is a 16 bits format, so aem is always required
 		GSVector4 ta(m_env.TEXA & GSVector4i::x000000ff());
 		ta /= 255.0f;
-		// FIXME rely on compiler for the optimization
-		ps_cb.TA_Af.x = ta.x;
-		ps_cb.TA_Af.y = ta.y;
+		m_conf.cb_ps.TA_MaxDepth_Af.x = ta.x;
+		m_conf.cb_ps.TA_MaxDepth_Af.y = ta.y;
 
 		// The purpose of texture shuffle is to move color channel. Extra interpolation is likely a bad idea.
 		bilinear &= m_vt.IsLinear();
@@ -749,9 +746,8 @@ void GSRendererOGL::EmulateTextureSampler(const GSTextureCache::Source* tex)
 		{
 			GSVector4 ta(m_env.TEXA & GSVector4i::x000000ff());
 			ta /= 255.0f;
-			// FIXME rely on compiler for the optimization
-			ps_cb.TA_Af.x = ta.x;
-			ps_cb.TA_Af.y = ta.y;
+			m_conf.cb_ps.TA_MaxDepth_Af.x = ta.x;
+			m_conf.cb_ps.TA_MaxDepth_Af.y = ta.y;
 		}
 
 		// Select the index format
@@ -834,20 +830,20 @@ void GSRendererOGL::EmulateTextureSampler(const GSTextureCache::Source* tex)
 
 	m_prog_sel.ps.fst = !!PRIM->FST;
 
-	ps_cb.WH = WH;
-	ps_cb.HalfTexel = GSVector4(-0.5f, 0.5f).xxyy() / WH.zwzw();
+	m_conf.cb_ps.WH = WH;
+	m_conf.cb_ps.HalfTexel = GSVector4(-0.5f, 0.5f).xxyy() / WH.zwzw();
 	if (complex_wms_wmt)
 	{
-		ps_cb.MskFix = GSVector4i(m_context->CLAMP.MINU, m_context->CLAMP.MINV, m_context->CLAMP.MAXU, m_context->CLAMP.MAXV);
-		ps_cb.MinMax = GSVector4(ps_cb.MskFix) / WH.xyxy();
+		m_conf.cb_ps.MskFix = GSVector4i(m_context->CLAMP.MINU, m_context->CLAMP.MINV, m_context->CLAMP.MAXU, m_context->CLAMP.MAXV);;
+		m_conf.cb_ps.MinMax = GSVector4(m_conf.cb_ps.MskFix) / WH.xyxy();
 	}
 	else if (trilinear_manual)
 	{
-		// Reuse MinMax for mipmap parameter to avoid an extension of the UBO
-		ps_cb.MinMax.x = (float)m_context->TEX1.K / 16.0f;
-		ps_cb.MinMax.y = float(1 << m_context->TEX1.L);
-		ps_cb.MinMax.z = float(m_lod.x); // Offset because first layer is m_lod, dunno if we can do better
-		ps_cb.MinMax.w = float(m_lod.y);
+		// Reuse uv_min_max for mipmap parameter to avoid an extension of the UBO
+		m_conf.cb_ps.MinMax.x = (float)m_context->TEX1.K / 16.0f;
+		m_conf.cb_ps.MinMax.y = float(1 << m_context->TEX1.L);
+		m_conf.cb_ps.MinMax.z = float(m_lod.x); // Offset because first layer is m_lod, dunno if we can do better
+		m_conf.cb_ps.MinMax.w = float(m_lod.y);
 	}
 	else if (trilinear_auto)
 	{
@@ -855,16 +851,18 @@ void GSRendererOGL::EmulateTextureSampler(const GSTextureCache::Source* tex)
 	}
 
 	// TC Offset Hack
-	m_prog_sel.ps.tcoffsethack = m_userhacks_tcoffset;
-	ps_cb.TC_OH_TS = GSVector4(1 / 16.0f, 1 / 16.0f, m_userhacks_tcoffset_x, m_userhacks_tcoffset_y) / WH.xyxy();
+	m_conf.ps.tcoffsethack = m_userhacks_tcoffset;
+	GSVector4 tc_oh_ts = GSVector4(1 / 16.0f, 1 / 16.0f, m_userhacks_tcoffset_x, m_userhacks_tcoffset_y) / WH.xyxy();
+	m_conf.cb_ps.TCOffsetHack = GSVector2(tc_oh_ts.z, tc_oh_ts.w);
+	m_conf.cb_vs.texture_scale = GSVector2(tc_oh_ts.x, tc_oh_ts.y);
 
 	// Must be done after all coordinates math
 	if (m_context->HasFixedTEX0() && !PRIM->FST)
 	{
 		m_prog_sel.ps.invalid_tex0 = 1;
 		// Use invalid size to denormalize ST coordinate
-		ps_cb.WH.x = (float)(1 << m_context->stack.TEX0.TW);
-		ps_cb.WH.y = (float)(1 << m_context->stack.TEX0.TH);
+		m_conf.cb_ps.WH.x = (float)(1 << m_context->stack.TEX0.TW);
+		m_conf.cb_ps.WH.y = (float)(1 << m_context->stack.TEX0.TH);
 
 		// We can't handle m_target with invalid_tex0 atm due to upscaling
 		ASSERT(!tex->m_target);
@@ -1011,63 +1009,35 @@ void GSRendererOGL::SendDraw()
 
 	if (!m_require_full_barrier && m_require_one_barrier)
 	{
-		// Need only a single barrier
-		glTextureBarrier();
-		dev->DrawIndexedPrimitive();
-	}
-	else if (!m_require_full_barrier)
-	{
-		// Don't need any barrier
-		dev->DrawIndexedPrimitive();
-	}
-	else if (m_prim_overlap == PRIM_OVERLAP_NO)
-	{
-		// Need full barrier but a single barrier will be enough
-		glTextureBarrier();
-		dev->DrawIndexedPrimitive();
-	}
-	else if (m_vt.m_primclass == GS_SPRITE_CLASS)
-	{
-		const size_t nb_vertex = (m_prog_sel.gs.sprite == 1) ? 2 : 6;
-
-		GL_PUSH("Split the draw (SPRITE)");
-
-#if defined(_DEBUG)
-		// Check how draw call is split.
-		std::map<size_t, size_t> frequency;
-		for (const auto& it : m_drawlist)
-			++frequency[it];
-
-		std::string message;
-		for (const auto& it : frequency)
-			message += " " + std::to_string(it.first) + "(" + std::to_string(it.second) + ")";
-
-		GL_PERF("Split single draw (%d sprites) into %zu draws: consecutive draws(frequency):%s",
-				m_index.tail / nb_vertex, m_drawlist.size(), message.c_str());
-#endif
-
-		for (size_t count = 0, p = 0, n = 0; n < m_drawlist.size(); p += count, ++n)
-		{
-			count = m_drawlist[n] * nb_vertex;
-			glTextureBarrier();
-			dev->DrawIndexedPrimitive(p, count);
-		}
-	}
-	else
-	{
-		// FIXME: Investigate: a dynamic check to pack as many primitives as possibles
-		// I'm nearly sure GS already have this kind of code (maybe we can adapt GSDirtyRect)
-		const size_t nb_vertex = GSUtil::GetClassVertexCount(m_vt.m_primclass);
-
-		GL_PUSH("Split the draw");
-
-		GL_PERF("Split single draw in %d draw", m_index.tail / nb_vertex);
-
-		for (size_t p = 0; p < m_index.tail; p += nb_vertex)
-		{
-			glTextureBarrier();
-			dev->DrawIndexedPrimitive(p, nb_vertex);
-		}
+		case ATST_LESS:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF - 0.1f;
+			ps.atst = 1;
+			break;
+		case ATST_LEQUAL:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF - 0.1f + 1.0f;
+			ps.atst = 1;
+			break;
+		case ATST_GEQUAL:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF - 0.1f;
+			ps.atst = 2;
+			break;
+		case ATST_GREATER:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF - 0.1f + 1.0f;
+			ps.atst = 2;
+			break;
+		case ATST_EQUAL:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF;
+			ps.atst = 3;
+			break;
+		case ATST_NOTEQUAL:
+			cb.FogColor_AREF.a = (float)m_context->TEST.AREF;
+			ps.atst = 4;
+			break;
+		case ATST_NEVER: // Draw won't be done so no need to implement it in shader
+		case ATST_ALWAYS:
+		default:
+			ps.atst = 0;
+			break;
 	}
 }
 
@@ -1336,20 +1306,20 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 	{
 		GL_DBG("DITHERING mode ENABLED (%d)", m_dithering);
 
-		m_prog_sel.ps.dither = m_dithering;
-		ps_cb.DitherMatrix[0] = GSVector4(m_env.DIMX.DM00, m_env.DIMX.DM01, m_env.DIMX.DM02, m_env.DIMX.DM03);
-		ps_cb.DitherMatrix[1] = GSVector4(m_env.DIMX.DM10, m_env.DIMX.DM11, m_env.DIMX.DM12, m_env.DIMX.DM13);
-		ps_cb.DitherMatrix[2] = GSVector4(m_env.DIMX.DM20, m_env.DIMX.DM21, m_env.DIMX.DM22, m_env.DIMX.DM23);
-		ps_cb.DitherMatrix[3] = GSVector4(m_env.DIMX.DM30, m_env.DIMX.DM31, m_env.DIMX.DM32, m_env.DIMX.DM33);
+		m_conf.ps.dither = m_dithering;
+		m_conf.cb_ps.DitherMatrix[0] = GSVector4(m_env.DIMX.DM00, m_env.DIMX.DM01, m_env.DIMX.DM02, m_env.DIMX.DM03);
+		m_conf.cb_ps.DitherMatrix[1] = GSVector4(m_env.DIMX.DM10, m_env.DIMX.DM11, m_env.DIMX.DM12, m_env.DIMX.DM13);
+		m_conf.cb_ps.DitherMatrix[2] = GSVector4(m_env.DIMX.DM20, m_env.DIMX.DM21, m_env.DIMX.DM22, m_env.DIMX.DM23);
+		m_conf.cb_ps.DitherMatrix[3] = GSVector4(m_env.DIMX.DM30, m_env.DIMX.DM31, m_env.DIMX.DM32, m_env.DIMX.DM33);
 	}
 
 	if (PRIM->FGE)
 	{
 		m_prog_sel.ps.fog = 1;
 
-		const GSVector4 fc = GSVector4::rgba32(m_env.FOGCOL.u32[0]);
+		const GSVector4 fc = GSVector4::rgba32(m_env.FOGCOL.U32[0]);
 		// Blend AREF to avoid to load a random value for alpha (dirty cache)
-		ps_cb.FogColor_AREF = fc.blend32<8>(ps_cb.FogColor_AREF);
+		m_conf.cb_ps.FogColor_AREF = fc.blend32<8>(m_conf.cb_ps.FogColor_AREF);
 	}
 
 	// Warning must be done after EmulateZbuffer

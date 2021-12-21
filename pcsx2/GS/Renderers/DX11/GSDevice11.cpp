@@ -1349,7 +1349,131 @@ void GSDevice11::CompileShader(const std::string& source, const char* fn, ID3DIn
 		throw GSRecoverableError();
 }
 
-uint16 GSDevice11::ConvertBlendEnum(uint16 generic)
+static GSDevice11::OMBlendSelector convertSel(GSHWDrawConfig::ColorMaskSelector cm, GSHWDrawConfig::BlendState blend)
+{
+	GSDevice11::OMBlendSelector out;
+	out.wrgba = cm.wrgba;
+	out.abe = blend.index != 0;
+	out.blend_index = blend.index;
+	out.accu_blend = blend.is_accumulation;
+	out.blend_mix = blend.is_mixed_hw_sw;
+	return out;
+}
+
+/// Checks that we weren't sent things we declared we don't support
+/// Clears things we don't support that can be quietly disabled
+static void preprocessSel(GSDevice11::PSSelector& sel)
+{
+	ASSERT(sel.date      == 0); // In-shader destination alpha not supported and shouldn't be sent
+	ASSERT(sel.write_rg  == 0); // Not supported, shouldn't be sent
+	ASSERT(sel.tex_is_fb == 0); // Not supported, shouldn't be sent
+	sel.iip           = 0; // Handled in GS, not PS in DX11
+	sel.automatic_lod = 0; // Not currently supported in DX11
+	sel.manual_lod    = 0; // Not currently supported in DX11
+}
+
+static void preprocessSel(GSDevice11::PSSamplerSelector& sel)
+{
+	sel.aniso = 0; // Not currently supported
+	sel.triln = 0; // Not currently supported
+}
+
+void GSDevice11::RenderHW(GSHWDrawConfig& config)
+{
+	ASSERT(!config.require_full_barrier); // We always specify no support so it shouldn't request this
+	preprocessSel(config.ps);
+	preprocessSel(config.sampler);
+
+	if (config.destination_alpha != GSHWDrawConfig::DestinationAlphaMode::Off)
+	{
+		const GSVector4 src = GSVector4(config.scissor) / GSVector4(config.ds->GetSize()).xyxy();
+		const GSVector4 dst = src * 2.0f - 1.0f;
+
+		GSVertexPT1 vertices[] =
+		{
+			{GSVector4(dst.x, -dst.y, 0.5f, 1.0f), GSVector2(src.x, src.y)},
+			{GSVector4(dst.z, -dst.y, 0.5f, 1.0f), GSVector2(src.z, src.y)},
+			{GSVector4(dst.x, -dst.w, 0.5f, 1.0f), GSVector2(src.x, src.w)},
+			{GSVector4(dst.z, -dst.w, 0.5f, 1.0f), GSVector2(src.z, src.w)},
+		};
+
+		SetupDATE(config.rt, config.ds, vertices, config.datm);
+	}
+
+	GSTexture* hdr_rt = nullptr;
+	if (config.ps.hdr)
+	{
+		const GSVector2i size = config.rt->GetSize();
+		const GSVector4 dRect(config.scissor);
+		const GSVector4 sRect = dRect / GSVector4(size.x, size.y).xyxy();
+		hdr_rt = CreateRenderTarget(size.x, size.y, GSTexture::Format::FloatColor);
+		hdr_rt->CommitRegion(GSVector2i(config.scissor.z, config.scissor.w));
+		// Warning: StretchRect must be called before BeginScene otherwise
+		// vertices will be overwritten. Trust me you don't want to do that.
+		StretchRect(config.rt, sRect, hdr_rt, dRect, ShaderConvert::COPY, false);
+	}
+
+	BeginScene();
+
+	void* ptr = nullptr;
+	if (IAMapVertexBuffer(&ptr, sizeof(*config.verts), config.nverts))
+	{
+		GSVector4i::storent(ptr, config.verts, config.nverts * sizeof(*config.verts));
+		IAUnmapVertexBuffer();
+	}
+	IASetIndexBuffer(config.indices, config.nindices);
+	D3D11_PRIMITIVE_TOPOLOGY topology;
+	switch (config.topology)
+	{
+		case GSHWDrawConfig::Topology::Point:    topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;    break;
+		case GSHWDrawConfig::Topology::Line:     topology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;     break;
+		case GSHWDrawConfig::Topology::Triangle: topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
+	}
+	IASetPrimitiveTopology(topology);
+
+	PSSetShaderResources(config.tex, config.pal);
+	PSSetShaderResource(4, config.raw_tex);
+
+	if (config.require_one_barrier) // Used as "bind rt" flag when texture barrier is unsupported
+	{
+		// Bind the RT.This way special effect can use it.
+		// Do not always bind the rt when it's not needed,
+		// only bind it when effects use it such as fbmask emulation currently
+		// because we copy the frame buffer and it is quite slow.
+		PSSetShaderResource(3, config.rt);
+	}
+
+	SetupOM(config.depth, convertSel(config.colormask, config.blend), config.blend.factor);
+	SetupVS(config.vs, &config.cb_vs);
+	SetupGS(config.gs);
+	SetupPS(config.ps, &config.cb_ps, config.sampler);
+
+	OMSetRenderTargets(hdr_rt ? hdr_rt : config.rt, config.ds, &config.scissor);
+
+	DrawIndexedPrimitive();
+
+	if (config.alpha_second_pass.enable)
+	{
+		preprocessSel(config.alpha_second_pass.ps);
+		SetupPS(config.alpha_second_pass.ps, &config.alpha_second_pass.cb_ps, config.sampler);
+		SetupOM(config.alpha_second_pass.depth, convertSel(config.alpha_second_pass.colormask, config.blend), config.blend.factor);
+
+		DrawIndexedPrimitive();
+	}
+
+	EndScene();
+
+	if (hdr_rt)
+	{
+		const GSVector2i size = config.rt->GetSize();
+		const GSVector4 dRect(config.scissor);
+		const GSVector4 sRect = dRect / GSVector4(size.x, size.y).xyxy();
+		StretchRect(hdr_rt, sRect, config.rt, dRect, ShaderConvert::MOD_256, false);
+		Recycle(hdr_rt);
+	}
+}
+
+u16 GSDevice11::ConvertBlendEnum(u16 generic)
 {
 	switch (generic)
 	{

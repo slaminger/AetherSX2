@@ -52,7 +52,6 @@ out gl_PerVertex {
 layout(std140, binding = 2) uniform cb15
 {
     ivec4 ScalingFactor;
-    ivec4 ChannelShuffle;
 
     int EMODA;
     int EMODC;
@@ -95,8 +94,10 @@ layout(std140, binding = 0) uniform cb21
 
     vec4 MinMax;
 
-    vec2 TextureScale;
+    ivec4 ChannelShuffle;
+
     vec2 TC_OffsetHack;
+    vec2 pad_cb21;
 
     vec3 pad1_cb21;
     float MaxDepthPS;
