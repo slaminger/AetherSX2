@@ -1219,7 +1219,8 @@ __fi void cdvdReadInterrupt()
 	if (cdvd.nextSectorsBuffered)
 		CDVDREAD_INT((cdvd.BlockSize / 4));
 	else
-		CDVDREAD_INT((psxRegs.cycle - psxRegs.sCycle[IopEvt_CdvdSectorReady]) + ((cdvd.BlockSize / 4));
+		CDVDREAD_INT(cdvd.ReadTime + (cdvd.BlockSize / 4));
+
 
 }
 
@@ -1331,7 +1332,7 @@ static uint cdvdStartSeek(uint newsector, CDVD_MODE_TYPE mode)
 		seektime += (cdvd.BlockSize / 4);
 	}
 	else if(cdvd.nCommand != N_CD_SEEK)
-		CDVDSECTORREADY_INT(seektime + ((cdvd.BlockSize / 4) * 12));
+		CDVDSECTORREADY_INT(seektime + ((cdvd.BlockSize / 4)));
 	return seektime;
 }
 

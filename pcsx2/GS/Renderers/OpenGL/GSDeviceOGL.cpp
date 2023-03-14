@@ -488,7 +488,7 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 		GL_PUSH("GSDeviceOGL::Merge");
 
 		const auto shader = Host::ReadResourceFileToString("shaders/opengl/merge.glsl");
-		m_merge_obj.cb = new GSUniformBufferOGL("Merge UBO", g_merge_cb_index, sizeof(MergeConstantBuffer));
+
 		if (!shader.has_value())
 			return false;
 
@@ -509,7 +509,6 @@ bool GSDeviceOGL::Create(HostDisplay* display)
 		GL_PUSH("GSDeviceOGL::Interlace");
 
 		const auto shader = Host::ReadResourceFileToString("shaders/opengl/interlace.glsl");
-		m_interlace.cb = new GSUniformBufferOGL("Interlace UBO", g_interlace_cb_index, sizeof(InterlaceConstantBuffer));
 		if (!shader.has_value())
 			return false;
 
