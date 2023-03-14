@@ -54,8 +54,13 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/ndk_folder/build/cmake/
 make -j8
 ```
 6. Doing repack with "apk shell" and the new library:
-- cd apk
-- cp ../../purplesx2.apk .
+```
+cd apk
+```
+- Change apk_path to your shell apk file location.
+```
+cp /apk_path/urplesx2.apk .
+````
 ```
 mkdir -p lib/arm64-v8a && cp ../pcsx2/libemucore.so lib/arm64-v8a
 ```
@@ -73,7 +78,7 @@ apksigner sign --ks keyname.keystore --ks-pass "pass:pass_keystore" --ks-key-ali
 ```
 DONE, you will get the app installable and functional.
 --------
-# Full credits to Talreth/Stenzik.
+# Full credits to Talreth/Stenzek.
 --------
 # Special thanks:
 - Jonas Angel
