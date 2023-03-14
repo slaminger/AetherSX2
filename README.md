@@ -59,7 +59,7 @@ cd apk
 ```
 - Change apk_path to your shell apk file location.
 ```
-cp /apk_path/urplesx2.apk .
+cp /apk_path/purplesx2.apk .
 ````
 ```
 mkdir -p lib/arm64-v8a && cp ../pcsx2/libemucore.so lib/arm64-v8a
