@@ -2,16 +2,16 @@
 
 > Since this source was leaked to the public, no one has been interested in correcting it and actually making it happen; well it's here.
 --------
-• ⚠️ Note that this is not the full source version of the library, just the LGPL source and modified portions of it. The LGPL does not require full source code to be released, only closed source components may be relinked/combined into LGPL components and build instructions, included as per section 4/5 of the license.
+- ⚠️ Note that this is not the full source version of the library, just the LGPL source and modified portions of it. The LGPL does not require full source code to be released, only closed source components may be relinked/combined into LGPL components and build instructions, included as per section 4/5 of the license.
 
-• ⚠️ Since the source of the App (apk) is not public or leaked yet, a "shell" apk is needed to make the build work.
+- ⚠️ Since the source of the App (apk) is not public or leaked yet, a "shell" apk is needed to make the build work.
 
-• ⚠️ Also note that this source is very old (2021), it's the only one we have to work with, every contribution is welcome.
+- ⚠️ Also note that this source is very old (2021), it's the only one we have to work with, every contribution is welcome.
 --------
 # Things to do:
-TODO list
+
 - [x] Make source buildable
-- [x] Approximate git history (be 'git-his' branch)
+- [x] Approximate git history (check 'git-his' branch)
 - [ ] New contributors, PRs
 - [ ] Update to the latest NDK/SDK
 - [ ] Update PCSX2 code
