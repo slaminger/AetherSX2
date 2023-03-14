@@ -1,38 +1,83 @@
-# All credit's go to Tahlreth.
+# AetherSX2/AetherPurpleSX2 Source
 
-AetherSX2 Build Instructions
+> Since this source was leaked to the public, no one has been interested in correcting it and actually making it happen; well it's here.
+--------
+• ⚠️ Note that this is not the full source version of the library, just the LGPL source and modified portions of it. The LGPL does not require full source code to be released, only closed source components may be relinked/combined into LGPL components and build instructions, included as per section 4/5 of the license.
 
-Please note that this is *not* a full source release for the library, only the LGPL sources, and parts of which that have been modified.
-Releasing full source code is *not* required by the LGPL, only that the closed source components can be re-linked/combined with
-the LGPL components and build instructions included as per section 4/5 of the license.
+• ⚠️ Since the source of the App (apk) is not public or leaked yet, a "shell" apk is needed to make the build work.
 
-An apk suitable for injecting the recompiled library is provided as a convenience, as the library cannot be used outside
-of the Android app without modification.
-
+• ⚠️ Also note that this source is very old (2021), it's the only one we have to work with, every contribution is welcome.
+--------
+# Things to do:
+TODO list
+- [x] Make source buildable
+- [x] Approximate git history (be 'git-his' branch)
+- [ ] New contributors, PRs
+- [ ] Update to the latest NDK/SDK
+- [ ] Update PCSX2 code
+- [ ] Add features from the latest AetherSX2
+- [ ] App completely decompiled and redone (reverse engineering)
+- [ ] several other things 
+--------
+# Dependencies and requirements
 You will need:
- - Android SDK, Build Tools and NDK.
- - A Linux machine.
- - CMake
+- Android Studio/Android Studio Dependencies & SDK
+- Cmake (latest or 3.22.1)
+- Linux distro (Personally I recommend 22.04 LTS)
+- NDK Specifically [R23c](https://dl.google.com/android/repository/android-ndk-r23c-linux.zip)
+- Approximate 60GB free space and 8GB ram machine (minimum)
+- Shell apk [HERE](https://drive.google.com/file/d/1EsAqVQGIOUo2H_Pi41yuNXiuUy_7lz0o/view?usp=drivesdk)
+--------
+# Build Steps
+First, I recommend installing Android Studio, and installing the latest ndk and then downloading sdk 31.
 
-Build steps:
+Build Dependencies:
+```
+sudo apt install build-essential gcc g++ cmake make ninja-build git wget openssl zipalign apksigner zip unzip openjdk-19-jre-headless -y
+```
+- Creating libemucore.so:
+1. Extract NDK to any easily accessible place and rename it to something easy like 'ndk'
+2. Clone source:
+```
+git clone https://github.com/MrPurple666/AetherSX2 -b main
+```
+3. Creating necessary folders:
+```
+mkdir build-android && cd build-android && mkdir apk
+```
+4. Configure the CMAKE system (Change ndk_folder to your ndk path):
+```
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/ndk_folder/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-26 -DANDROID_ABI=arm64-v8a ..
+```
+5. Building libemucore library:
+```
+make -j8
+```
+6. Doing repack with "apk shell" and the new library:
+- cd apk
+- cp ../../purplesx2.apk .
+```
+mkdir -p lib/arm64-v8a && cp ../pcsx2/libemucore.so lib/arm64-v8a
+```
+7. Align and signing apk:
+```
+zipalign -p 4 purplesx2.apk purplesx2-aligned.apk
+```
 
-1. Clone the repo and change into that directory: cd aethersx2
-2. Create a build directory for the native library and change into it: mkdir build-android; cd build-android
-3. Configure the build system. Change PATH_TO_NDK to whereever the NDK is installed: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/PATH_TO_NDK/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-26 -DANDROID_ABI=arm64-v8a ..
-4. Compile the native library: make -j16 (or whatever CPU count you have)
-5. Create a directory for packaging the APK: mkdir apk; cd apk
-6. Copy the skeleton APK to this directory: cp PATH_TO_app-release-unsigned.apk aethersx2.apk
-7. Copy the native library into the correct location: mkdir -p lib/arm64-v8a; cp ../pcsx2/libemucore.so lib/arm64-v8a
-8. Add the native library to the APK. zip is used instead of aapt because aapt will compress it: zip -0 aethersx2.apk lib/arm64-v8a/libemucore.so
-9. Ensure the native library is aligned to a 4-byte boundary: zipalign -p 4 aethersx2.apk aethersx2-aligned.apk
-10. Create a signing key for your build. Mark down the keystore password. keytool -genkey -v -keystore keyname.keystore -alias keyname -keyalg RSA -keysize 2048 -validity 10000
-11. Sign the APK, replacing PASSWORD_TO_KEYSTORE with above: apksigner sign --ks keyname.keystore --ks-pass "pass:PASSWORD_TO_KEYSTORE" --ks-key-alias keyname --out aethersx2-signed.apk --verbose aethersx2-aligned.apk
-
-This will produce aethersx2-signed.apk, which can be installed on your device.
-
------
-
-Proceed at your own risk.
-
-Original source code was uploaded to archive.org by juliussan January 16th 2023
-https://archive.org/details/aethersx2-libemucore.tar
+```
+keytool -genkey -v -keystore keyname.keystore -alias keyname -keyalg RSA -keysize 2048 -validity 10000
+```
+- change pass_keystore to the password you created when generating your signature 
+```
+apksigner sign --ks keyname.keystore --ks-pass "pass:pass_keystore" --ks-key-alias keyname --out purplesx2-signed.apk --verbose purplesx2-aligned.apk
+```
+DONE, you will get the app installable and functional.
+--------
+# Full credits to Talreth/Stenzik.
+--------
+# Special thanks:
+- Jonas Angel
+- Gamer64yt
+- GiovanYCringe
+- Hacobotdev
+- All the people who supported me and support emulation projects, my sincere thanks ♥️💜♥️.
