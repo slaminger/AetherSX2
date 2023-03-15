@@ -26,7 +26,7 @@ You will need:
 - Linux distro (Personally I recommend 22.04 LTS)
 - NDK Specifically [R23c](https://dl.google.com/android/repository/android-ndk-r23c-linux.zip)
 - Approximate 60GB free space and 8GB ram machine (minimum)
-- Shell apk [HERE](https://drive.google.com/file/d/1EsAqVQGIOUo2H_Pi41yuNXiuUy_7lz0o/view?usp=drivesdk)
+- Shell apk [HERE](https://drive.google.com/file/d/1FoLijHU4w9T82frNr145jE_IalYmuIDC/view?usp=drivesdk)
 --------
 # Build Steps
 First, I recommend installing Android Studio, and installing the latest ndk and then downloading sdk 31.
@@ -64,6 +64,10 @@ cp /apk_path/purplesx2.apk .
 ```
 mkdir -p lib/arm64-v8a && cp ../pcsx2/libemucore.so lib/arm64-v8a
 ```
+```
+zip -0 purplesx2.apk lib/arm64-v8a/libemucore.so
+```
+
 7. Align and signing apk:
 ```
 zipalign -p 4 purplesx2.apk purplesx2-aligned.apk
