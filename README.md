@@ -86,6 +86,7 @@ DONE, you will get the app installable and functional.
 --------
 # Special thanks:
 - Jonas Angel
+- Mis012 (git history approximation)
 - Gamer64yt
 - GiovanYCringe
 - Hacobotdev
