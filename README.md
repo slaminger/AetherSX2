@@ -15,6 +15,7 @@
 - [ ] New contributors, PRs
 - [ ] Update to the latest NDK/SDK
 - [ ] Update PCSX2 code
+- [ ] Vulkan renderer
 - [ ] Add features from the latest AetherSX2
 - [ ] App completely decompiled and redone (reverse engineering)
 - [ ] several other things 
