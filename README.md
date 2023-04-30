@@ -40,7 +40,7 @@ sudo apt install build-essential gcc g++ cmake make ninja-build git wget openssl
 1. Extract NDK to any easily accessible place and rename it to something easy like 'ndk'
 2. Clone source:
 ```
-git clone https://github.com/MrPurple666/AetherSX2 -b main
+git clone https://github.com/slaminger/AetherSX2 -b main
 ```
 3. Creating necessary folders:
 ```
